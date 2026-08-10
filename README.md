@@ -1,1 +1,1 @@
-# trading_backend
+# AI-POWERED CRYPTO TRADING PLATFORM
