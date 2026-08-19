@@ -1,0 +1,16 @@
+# Dependencies & Build Outputs
+node_modules/
+trading-react/node_modules/
+trading-react/dist/
+Trading/target/
+*.log
+
+# Environment & Sensitive files
+.env
+.env.local
+
+# IDE & OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
