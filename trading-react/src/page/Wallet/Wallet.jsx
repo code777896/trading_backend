@@ -5,9 +5,37 @@ import TopupForm from "./TopupForm"
 import WithdrawalForm from "./WithdrawalForm"
 import TransferForm from "./TransferForm"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-
+import { useState, useEffect } from "react"
 
 const Wallet = () => {
+  const [wallet, setWallet] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  const fetchWallet = async () => {
+    const jwt = localStorage.getItem('jwt')
+    if (!jwt) return
+    setLoading(true)
+    try {
+      const response = await fetch('http://localhost:5454/api/wallet', {
+        headers: {
+          'Authorization': `Bearer ${jwt}`
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setWallet(data)
+      }
+    } catch (err) {
+      console.error('Error fetching wallet:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchWallet()
+  }, [])
+
   return (
     <div className='flex flex-col items-center'>
       <div className='pt-10 w-full lg:w-[60%] '>
@@ -20,14 +48,14 @@ const Wallet = () => {
                   <CardTitle className='text-2xl font-bold text-gray-100'>My Wallet</CardTitle>
                   <div className='flex items-center gap-2'>
                     <p className='text-gray-200 text-sm'>
-                      #A475Ed
+                      #{wallet?.id ? wallet.id.substring(0, 8) : 'A475Ed'}
                     </p>
                     <CopyIcon size={15} className='cursor-pointer text-gray-200 hover:text-slate-400'/>
                   </div>
                 </div>
               </div>
               <div>
-                <RefreshCwIcon className="w-6 h-6 text-gray-200 cursor-pointer hover:text-gray-400" />
+                <RefreshCwIcon onClick={fetchWallet} className="w-6 h-6 text-gray-200 cursor-pointer hover:text-gray-400" />
               </div>
             </div>
           </CardHeader>
@@ -35,7 +63,7 @@ const Wallet = () => {
             <div className='flex items-center'>
               <DollarSign color="white"/>
               <span className='text-2xl font-semibold text-gray-100'>
-                20000
+                {loading ? '...' : (wallet?.balance !== undefined ? wallet.balance : 0)}
               </span>
             </div>
             <div className='flex gap-7 mt-10'>

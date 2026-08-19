@@ -1,11 +1,10 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { VerifiedIcon } from 'lucide-react'
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -13,77 +12,96 @@ import {
 import { Button } from '@/components/ui/button'
 import AccountVerificationForm from './AccountVerificationForm'
 
-const Profile = () => {
+const Profile = ({ onLogout }) => {
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const jwt = localStorage.getItem('jwt')
+      if (!jwt) return
+      try {
+        const response = await fetch('http://localhost:5454/api/users/profile', {
+          headers: {
+            'Authorization': `Bearer ${jwt}`
+          }
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data)
+        }
+      } catch (err) {
+        console.error('Error fetching profile:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProfile()
+  }, [])
+
   const handleEnableTwoStepVerification = () => {
     console.log('Two-step verification');
   }
+
   return (
     <div className=' flex flex-col items-center mb-5'>
       <div className='pt-10 w-full lg:w-[50%]'>
         <Card className='bg-[#00001c] border border-white/10 text-white'>
-          <CardHeader classname='pb-9 '>
-            <CardTitle className='text-xl font-semibold'>Your Information</CardTitle>
+          <CardHeader className='pb-9 '>
+            <div className='flex justify-between items-center'>
+              <CardTitle className='text-xl font-semibold'>Your Information</CardTitle>
+              {onLogout && (
+                <Button onClick={onLogout} variant='destructive' size='sm'>
+                  Logout
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
-            <div className='lg:flex gap-32'>
-              <div className='space-y-7'>
-                <div className='flex'>
-                  <p className='w-[9rem]'>Email : </p>
-                  <p className='text-gray-500'>john.doe@example.com</p>
-                </div>
-                <div className='flex'>
-                  <p className='w-[9rem]'>Full Name : </p>
-                  <p className='text-gray-500'>john doe</p>
-                </div>
-                <div className='flex'>
-                  <p className='w-[9rem]'>Date of Birth : </p>
-                  <p className='text-gray-500'>25/06/1990</p>
-                </div>
-                <div className='flex'>
-                  <p className='w-[9rem]'>Nationality : </p>
-                  <p className='text-gray-500'>Nepali</p>
-                </div>
-              </div>
-              <div className='space-y-7'>
-                <div className='flex'>
-                  <p className='w-[9rem]'>Address : </p>
-                  <p className='text-gray-500'>Ranighat</p>
-                </div>
-                <div className='flex'>
-                  <p className='w-[9rem]'>City : </p>
-                  <p className='text-gray-500'>Birgunj</p>
-                </div>
-                <div className='flex'>
-                  <p className='w-[9rem]'>Postal Code : </p>
-                  <p className='text-gray-500'>143109</p>
-                </div>
-                <div className='flex'>
-                  <p className='w-[9rem]'>Country : </p>
-                  <p className='text-gray-500'>Nepal</p>
+            {loading ? (
+              <p className='text-gray-400 text-center py-4'>Loading profile...</p>
+            ) : (
+              <div className='lg:flex gap-32'>
+                <div className='space-y-7'>
+                  <div className='flex'>
+                    <p className='w-[9rem]'>Email : </p>
+                    <p className='text-gray-400'>{user?.email || 'N/A'}</p>
+                  </div>
+                  <div className='flex'>
+                    <p className='w-[9rem]'>Full Name : </p>
+                    <p className='text-gray-400'>{user?.fullName || 'N/A'}</p>
+                  </div>
+                  <div className='flex'>
+                    <p className='w-[9rem]'>Role : </p>
+                    <p className='text-gray-400'>{user?.role || 'ROLE_CUSTOMER'}</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
         <div className='mt-6'>
           <Card className='bg-[#00001c] w-full border border-white/10 text-white'>
-            <CardHeader classname='pb-7'>
-              <div className='flex Items-center gap-3'>
+            <CardHeader className='pb-7'>
+              <div className='flex items-center gap-3'>
                 <CardTitle className='text-xl font-semibold'>2 Step Verification</CardTitle>
-              {true?  <Badge classname='space-x-2 bg-green-600 '>
-                  <VerifiedIcon />
-                  <span>Enabled</span>
-                </Badge>:
-                <Badge className='bg-orange-500 text-black'>
-                  Disabled
-                </Badge> }
+                {user?.twoFactorAuth?.enabled ? (
+                  <Badge className='space-x-2 bg-green-600 '>
+                    <VerifiedIcon />
+                    <span>Enabled</span>
+                  </Badge>
+                ) : (
+                  <Badge className='bg-orange-500 text-black'>
+                    Disabled
+                  </Badge>
+                )}
               </div>
             </CardHeader>
             <CardContent>
               <div>
                 <Dialog>
-                  <DialogTrigger>
-                    <Button >Enable Two Step Verification</Button>
+                  <DialogTrigger asChild>
+                    <Button>Enable Two Step Verification</Button>
                   </DialogTrigger>
                   <DialogContent className='bg-[#020214] border-slate-700 p-6 max-w-md rounded-2xl'>
                     <DialogHeader>

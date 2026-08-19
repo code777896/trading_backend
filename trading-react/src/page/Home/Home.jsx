@@ -78,7 +78,7 @@ const Home = () => {
                             Top Losers
                         </Button>
                     </div>
-                    <AssetTable />
+                    <AssetTable category={category} />
                 </div>
 
                 <div className='hidden lg:block lg:w-[50%] p-5'>
